@@ -47,7 +47,8 @@ def train(args, logdir):
         steps_per_epoch=hp.train1.steps_per_epoch,
         # session_config=session_conf
     )
-    ckpt = '{}/{}'.format(logdir, args.ckpt) if args.ckpt else tf.train.latest_checkpoint(logdir)
+    ckpt = '{}/{}'.format(logdir,
+                          args.ckpt) if args.ckpt else tf.train.latest_checkpoint(logdir)
     if ckpt:
         train_conf.session_init = SaverRestore(ckpt)
 
@@ -68,12 +69,13 @@ def get_arguments():
     arguments = parser.parse_args()
     return arguments
 
+
 if __name__ == '__main__':
     args = get_arguments()
     hp.set_hparam_yaml(args.case)
     logdir_train1 = '{}/train1'.format(hp.logdir)
 
-    print('case: {}, logdir: {}'.format(args.case1, args.case, logdir_train1))
+    # print('case: {}, logdir: {}'.format(args.case1, args.case, logdir_train1))
 
     train(args, logdir=logdir_train1)
 
