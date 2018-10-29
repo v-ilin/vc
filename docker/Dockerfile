@@ -6,8 +6,8 @@ RUN apt-get update -y && apt-get install -y \
   libsndfile1-dev \
   git \
   ffmpeg \
- && apt-get clean \
- && rm -rf /var/lib/apt/lists/*
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
 
 
 ADD pip-requirements.txt /pip-requirements.txt
