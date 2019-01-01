@@ -6,9 +6,12 @@ RUN apt-get update -y && apt-get install -y \
   libsndfile1-dev \
   git \
   ffmpeg \
- && apt-get clean \
- && rm -rf /var/lib/apt/lists/*
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
 
 
 ADD pip-requirements.txt /pip-requirements.txt
-RUN pip install -r /pip-requirements.txt
+RUN pip install --upgrade pip \
+  && pip install -r /pip-requirements.txt \
+  aenum \
+  && pip install git+https://github.com/rabitt/pysox.git

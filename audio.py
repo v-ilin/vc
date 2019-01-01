@@ -150,7 +150,8 @@ def wav2spec(wav, n_fft, win_length, hop_length, time_first=True):
         Phase spectrogram.
 
     """
-    stft = librosa.stft(y=wav, n_fft=n_fft, hop_length=hop_length, win_length=win_length)
+    stft = librosa.stft(y=wav, n_fft=n_fft,
+                        hop_length=hop_length, win_length=win_length)
     mag = np.abs(stft)
     phase = np.angle(stft)
 
@@ -200,7 +201,8 @@ def spec2wav(mag, n_fft, win_length, hop_length, num_iters=30, phase=None):
     for i in range(num_iters):
         wav = librosa.istft(stft, win_length=win_length, hop_length=hop_length)
         if i != num_iters - 1:
-            stft = librosa.stft(wav, n_fft=n_fft, win_length=win_length, hop_length=hop_length)
+            stft = librosa.stft(
+                wav, n_fft=n_fft, win_length=win_length, hop_length=hop_length)
             _, phase = librosa.magphase(stft)
             phase = np.angle(phase)
             stft = mag * np.exp(1.j * phase)
@@ -258,7 +260,8 @@ def linear_to_mel(linear, sr, n_fft, n_mels, **kwargs):
     :param n_mels: Number of mel filters.
     :return: Mel-spectrogram.
     """
-    mel_basis = librosa.filters.mel(sr, n_fft, n_mels, **kwargs)  # (n_mels, 1+n_fft//2)
+    mel_basis = librosa.filters.mel(
+        sr, n_fft, n_mels, **kwargs)  # (n_mels, 1+n_fft//2)
     mel = np.dot(mel_basis, linear)  # (n_mels, t) # mel spectrogram
     return mel
 
@@ -305,9 +308,11 @@ def dynamic_range_compression(db, threshold, ratio, method='downward'):
     :return: Range compressed dB-scaled magnitudes
     """
     if method is 'downward':
-        db[db > threshold] = (db[db > threshold] - threshold) / ratio + threshold
+        db[db > threshold] = (db[db > threshold] -
+                              threshold) / ratio + threshold
     elif method is 'upward':
-        db[db < threshold] = threshold - ((threshold - db[db < threshold]) / ratio)
+        db[db < threshold] = threshold - \
+            ((threshold - db[db < threshold]) / ratio)
     return db
 
 
@@ -324,7 +329,8 @@ def emphasize_magnitude(mag, power=1.2):
 
 def wav2melspec(wav, sr, n_fft, win_length, hop_length, n_mels, time_first=True, **kwargs):
     # Linear spectrogram
-    mag_spec, phase_spec = wav2spec(wav, n_fft, win_length, hop_length, time_first=False)
+    mag_spec, phase_spec = wav2spec(
+        wav, n_fft, win_length, hop_length, time_first=False)
 
     # Mel-spectrogram
     mel_spec = linear_to_mel(mag_spec, sr, n_fft, n_mels, **kwargs)
@@ -339,7 +345,8 @@ def wav2melspec(wav, sr, n_fft, win_length, hop_length, n_mels, time_first=True,
 def wav2melspec_db(wav, sr, n_fft, win_length, hop_length, n_mels, normalize=False, max_db=None, min_db=None,
                    time_first=True, **kwargs):
     # Mel-spectrogram
-    mel_spec = wav2melspec(wav, sr, n_fft, win_length, hop_length, n_mels, time_first=False, **kwargs)
+    mel_spec = wav2melspec(wav, sr, n_fft, win_length,
+                           hop_length, n_mels, time_first=False, **kwargs)
 
     # Decibel
     mel_db = librosa.amplitude_to_db(mel_spec)
@@ -360,7 +367,8 @@ def wav2mfcc(wav, sr, n_fft, win_length, hop_length, n_mels, n_mfccs, preemphasi
     wav_preem = preemphasis(wav, coeff=preemphasis_coeff)
 
     # Decibel-scaled mel-spectrogram
-    mel_db = wav2melspec_db(wav_preem, sr, n_fft, win_length, hop_length, n_mels, time_first=False, **kwargs)
+    mel_db = wav2melspec_db(wav_preem, sr, n_fft, win_length,
+                            hop_length, n_mels, time_first=False, **kwargs)
 
     # MFCCs
     mfccs = np.dot(librosa.filters.dct(n_mfccs, mel_db.shape[0]), mel_db)

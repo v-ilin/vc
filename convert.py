@@ -11,6 +11,7 @@ import numpy as np
 from audio import spec2wav, inv_preemphasis, db2amp, denormalize_db
 import datetime
 import tensorflow as tf
+import librosa
 from hparam import hparam as hp
 from data_load import Net2DataFlow
 from tensorpack.predict.base import OfflinePredictor
@@ -42,6 +43,9 @@ from tensorpack.callbacks.base import Callback
 
 
 def convert(predictor, df):
+
+    t = next(df().get_data())
+    print(t[0].shape)
     pred_spec, y_spec, ppgs = predictor(next(df().get_data()))
 
     # Denormalizatoin
@@ -55,10 +59,12 @@ def convert(predictor, df):
     # Emphasize the magnitude
     pred_spec = np.power(pred_spec, hp.convert.emphasis_magnitude)
     y_spec = np.power(y_spec, hp.convert.emphasis_magnitude)
-
     # Spectrogram to waveform
     audio = np.array(map(lambda spec: spec2wav(spec.T, hp.default.n_fft, hp.default.win_length, hp.default.hop_length,
                                                hp.default.n_iter), pred_spec))
+    librosa.output.write_wav(
+        '/home/user/vilin/deep-voice-conversion/output/file_trim_8.wav', audio[0], hp.default.sr)
+
     y_audio = np.array(map(lambda spec: spec2wav(spec.T, hp.default.n_fft, hp.default.win_length, hp.default.hop_length,
                                                  hp.default.n_iter), y_spec))
 
@@ -89,7 +95,8 @@ def do_convert(args, logdir1, logdir2):
     df = Net2DataFlow(hp.convert.data_path, hp.convert.batch_size)
 
     ckpt1 = tf.train.latest_checkpoint(logdir1)
-    ckpt2 = '{}/{}'.format(logdir2, args.ckpt) if args.ckpt else tf.train.latest_checkpoint(logdir2)
+    ckpt2 = '{}/{}'.format(logdir2,
+                           args.ckpt) if args.ckpt else tf.train.latest_checkpoint(logdir2)
     session_inits = []
     if ckpt2:
         session_inits.append(SaverRestore(ckpt2))
@@ -105,8 +112,10 @@ def do_convert(args, logdir1, logdir2):
     audio, y_audio, ppgs = convert(predictor, df)
 
     # Write the result
-    tf.summary.audio('A', y_audio, hp.default.sr, max_outputs=hp.convert.batch_size)
-    tf.summary.audio('B', audio, hp.default.sr, max_outputs=hp.convert.batch_size)
+    tf.summary.audio('A', y_audio, hp.default.sr,
+                     max_outputs=hp.convert.batch_size)
+    tf.summary.audio('B', audio, hp.default.sr,
+                     max_outputs=hp.convert.batch_size)
 
     # Visualize PPGs
     heatmap = np.expand_dims(ppgs, 3)  # channel=1
@@ -130,8 +139,10 @@ def do_convert(args, logdir1, logdir2):
 
 def get_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument('case1', type=str, help='experiment case name of train1')
-    parser.add_argument('case2', type=str, help='experiment case name of train2')
+    parser.add_argument('case1', type=str,
+                        help='experiment case name of train1')
+    parser.add_argument('case2', type=str,
+                        help='experiment case name of train2')
     parser.add_argument('-ckpt', help='checkpoint to load model.')
     arguments = parser.parse_args()
     return arguments
@@ -143,7 +154,8 @@ if __name__ == '__main__':
     logdir_train1 = '{}/{}/train1'.format(hp.logdir_path, args.case1)
     logdir_train2 = '{}/{}/train2'.format(hp.logdir_path, args.case2)
 
-    print('case1: {}, case2: {}, logdir1: {}, logdir2: {}'.format(args.case1, args.case2, logdir_train1, logdir_train2))
+    print('case1: {}, case2: {}, logdir1: {}, logdir2: {}'.format(
+        args.case1, args.case2, logdir_train1, logdir_train2))
 
     s = datetime.datetime.now()
 
